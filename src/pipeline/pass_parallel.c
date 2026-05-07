@@ -22,6 +22,7 @@ enum {
     PP_LOG_THRESH = 24,
     PP_LOG_INTERVAL = 10,
     PP_TIMER_THRESH = 1000,
+    PP_LARGE_FILE_LOG_BYTES = 128 * 1024,
 };
 #define PP_NSEC_PER_SEC 1000000000ULL
 #define PP_USEC_PER_MS 1000000ULL
@@ -475,7 +476,8 @@ static void extract_worker(int worker_id, void *ctx_ptr) {
 
         /* Per-file start log: shows which file each worker is processing.
          * Critical for diagnosing stuck workers on large vendored files. */
-        if (sort_pos < PP_LOG_THRESH) { /* first 2 rounds of workers = most interesting */
+        if (sort_pos < PP_LOG_THRESH || sort_pos >= ec->file_count - PP_LOG_THRESH ||
+            source_len > PP_LARGE_FILE_LOG_BYTES) {
             cbm_log_info("parallel.extract.file.start", "pos", itoa_log(sort_pos), "size_kb",
                          itoa_log(source_len / CBM_SZ_1K), "path", fi->rel_path);
         }
