@@ -1219,11 +1219,13 @@ static const char* type_to_qn(const CBMType* t) {
 
 static const CBMType* c_eval_expr_type_inner(CLSPContext* ctx, TSNode node);
 
+#define C_EVAL_STEP_LIMIT 10000
+
 const CBMType* c_eval_expr_type(CLSPContext* ctx, TSNode node) {
     if (ts_node_is_null(node)) return cbm_type_unknown();
     /* Guard against unbounded recursion on deeply nested C++ templates.
      * Prevents stack overflow and NULL-deref from unusual AST shapes. */
-    if (ctx->eval_depth > 256) {
+    if (ctx->eval_depth > 256 || ctx->eval_steps++ > C_EVAL_STEP_LIMIT) {
         return cbm_type_unknown();
     }
     ctx->eval_depth++;
